@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from babelscore.cli.shell import dispatch, COMMANDS
 
 
@@ -20,13 +20,10 @@ def test_dispatch_non_slash_input_prints_hint():
 
 
 def test_dispatch_init_calls_cmd_init():
-    mock_init = patch.object(COMMANDS, "__getitem__", wraps=COMMANDS.__getitem__)
-    with patch.dict(COMMANDS, {"/init": mock_init}):
-        from unittest.mock import MagicMock
-        mock_fn = MagicMock()
-        with patch.dict(COMMANDS, {"/init": mock_fn}):
-            dispatch("/init")
-            mock_fn.assert_called_once()
+    mock_fn = MagicMock()
+    with patch.dict(COMMANDS, {"/init": mock_fn}):
+        dispatch("/init")
+        mock_fn.assert_called_once()
 
 
 def test_dispatch_exit_raises_keyboard_interrupt():
