@@ -103,18 +103,16 @@ def test_normalise_url_empty_string():
 
 # ── run_wizard integration ─────────────────────────────────────────────────────
 
-# Prompt order (with fetch_models returning None → manual model entry):
+# Prompt order (_pick_provider and _resolve_api_key are patched in _run_wizard_with):
 #  0  project name
 #  1  source lang
 #  2  target lang
-#  3  translator base URL
-#  4  translator API key
-#  5  translator model name (manual fallback)
-#  6  judge base URL
-#  7  judge API key
-#  8  judge model name (manual fallback)
-#  9  show reasoning [Y/n]
-# 10  flag variance  [Y/n]
+#  3  translator base URL  (Custom path — mock provider triggers URL prompt)
+#  4  translator model     (manual fallback — fetch_models patched to None)
+#  5  judge base URL       (Custom path)
+#  6  judge model
+#  7  show reasoning [Y/n]
+#  8  flag variance  [Y/n]
 
 _HAPPY_INPUTS = [
     "en-fr-test",  # 0 project name
