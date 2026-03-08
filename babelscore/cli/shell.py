@@ -1,4 +1,5 @@
 from rich.console import Console
+from rich.panel import Panel
 from rich.text import Text
 from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
@@ -35,8 +36,50 @@ def print_banner():
     )
 
 
+def cmd_init():
+    console.print(Panel(
+        "BabelScore project initialisation\n\n"
+        "This command will guide you through creating a new\n"
+        "evaluation project — language pair, translator models,\n"
+        "judge models, and test data.\n\n"
+        "[dim]Coming soon.[/dim]",
+        title="/init",
+        border_style="cyan",
+    ))
+
+
+def cmd_help():
+    console.print(Panel(
+        "[cyan]/init[/cyan]    Start a new evaluation project\n"
+        "[cyan]/help[/cyan]    Show this help message\n"
+        "[cyan]/exit[/cyan]    Exit BabelScore",
+        title="Commands",
+        border_style="dim",
+    ))
+
+
+def cmd_exit():
+    raise KeyboardInterrupt
+
+
+COMMANDS = {
+    "/init":  cmd_init,
+    "/help":  cmd_help,
+    "/exit":  cmd_exit,
+    "/quit":  cmd_exit,
+}
+
+
 def dispatch(text: str):
-    console.print(f"[yellow]Unknown command:[/yellow] {text}")
+    if not text.startswith("/"):
+        console.print("[yellow]Commands start with /. Type /help for options.[/yellow]")
+        return
+    cmd = text.split()[0].lower()
+    handler = COMMANDS.get(cmd)
+    if handler:
+        handler()
+    else:
+        console.print(f"[yellow]Unknown command:[/yellow] {cmd}  — type /help for available commands.")
 
 
 def run_shell():
