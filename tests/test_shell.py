@@ -26,16 +26,11 @@ def test_dispatch_init_calls_cmd_init():
         mock_fn.assert_called_once()
 
 
-def test_dispatch_exit_raises_keyboard_interrupt():
-    with pytest.raises(KeyboardInterrupt):
-        dispatch("/exit")
-
-
 def test_dispatch_quit_raises_keyboard_interrupt():
     with pytest.raises(KeyboardInterrupt):
         dispatch("/quit")
 
 
 def test_all_commands_registered():
-    for cmd in ["/init", "/help", "/exit", "/quit"]:
+    for cmd in ["/init", "/help", "/quit"]:
         assert cmd in COMMANDS

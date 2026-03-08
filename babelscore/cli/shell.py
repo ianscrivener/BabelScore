@@ -53,7 +53,7 @@ def cmd_help():
     console.print(Panel(
         "[cyan]/init[/cyan]    Start a new evaluation project\n"
         "[cyan]/help[/cyan]    Show this help message\n"
-        "[cyan]/exit[/cyan]    Exit BabelScore",
+        "[cyan]/quit[/cyan]    Exit BabelScore",
         title="Commands",
         border_style="dim",
     ))
@@ -66,7 +66,6 @@ def cmd_exit():
 COMMANDS = {
     "/init":  cmd_init,
     "/help":  cmd_help,
-    "/exit":  cmd_exit,
     "/quit":  cmd_exit,
 }
 
