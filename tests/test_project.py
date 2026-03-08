@@ -1,7 +1,5 @@
 import json
-import pytest
 import yaml
-from pathlib import Path
 from unittest.mock import patch
 from babelscore.config.project import create_project, project_exists
 

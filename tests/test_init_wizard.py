@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from babelscore.cli.init_wizard import fetch_models, slug_from_url
 
