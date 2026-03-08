@@ -30,3 +30,11 @@ def save_model_cache(provider_slug: str, models: list[str]) -> None:
     cache_dir = BABELSCORE_DIR / "providers" / provider_slug
     cache_dir.mkdir(parents=True, exist_ok=True)
     (cache_dir / "models.json").write_text(json.dumps(models, indent=2))
+
+
+def write_env_key(var_name: str, value: str) -> None:
+    """Append VAR=value to ~/.babelscore/.env. Creates file and dirs if absent."""
+    BABELSCORE_DIR.mkdir(parents=True, exist_ok=True)
+    env_path = BABELSCORE_DIR / ".env"
+    with env_path.open("a") as f:
+        f.write(f"{var_name}={value}\n")

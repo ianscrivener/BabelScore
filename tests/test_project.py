@@ -60,3 +60,31 @@ def test_save_model_cache_writes_json(tmp_path):
     assert cache_path.exists()
     data = json.loads(cache_path.read_text())
     assert "gpt-4o" in data
+
+
+def test_write_env_key_creates_file(tmp_path):
+    with patch("babelscore.config.project.BABELSCORE_DIR", tmp_path):
+        from babelscore.config.project import write_env_key
+        write_env_key("OPENAI_API_KEY", "sk-abc123")
+    env_path = tmp_path / ".env"
+    assert env_path.exists()
+    assert "OPENAI_API_KEY=sk-abc123" in env_path.read_text()
+
+
+def test_write_env_key_appends_to_existing(tmp_path):
+    env_path = tmp_path / ".env"
+    env_path.write_text("EXISTING_KEY=already-here\n")
+    with patch("babelscore.config.project.BABELSCORE_DIR", tmp_path):
+        from babelscore.config.project import write_env_key
+        write_env_key("NEW_KEY", "new-value")
+    content = env_path.read_text()
+    assert "EXISTING_KEY=already-here" in content
+    assert "NEW_KEY=new-value" in content
+
+
+def test_write_env_key_creates_parent_dirs(tmp_path):
+    nested = tmp_path / "nested"
+    with patch("babelscore.config.project.BABELSCORE_DIR", nested):
+        from babelscore.config.project import write_env_key
+        write_env_key("FOO", "bar")
+    assert (nested / ".env").exists()
