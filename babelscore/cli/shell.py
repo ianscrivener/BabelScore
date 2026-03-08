@@ -82,16 +82,21 @@ def dispatch(text: str):
         )
 
 
-def run_shell():
+def run_shell(_input=None, _output=None):
     print_banner()
     completer = WordCompleter(list(COMMANDS.keys()), match_middle=False)
-    session = PromptSession(
+    session_kwargs = dict(
         message=[("class:prompt", "> ")],
         style=PROMPT_STYLE,
         key_bindings=bindings,
         completer=completer,
         complete_while_typing=True,
     )
+    if _input is not None:
+        session_kwargs["input"] = _input
+    if _output is not None:
+        session_kwargs["output"] = _output
+    session = PromptSession(**session_kwargs)
     while True:
         try:
             raw = session.prompt()
