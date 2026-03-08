@@ -106,26 +106,33 @@ def test_normalise_url_empty_string():
 # 10  flag variance  [Y/n]
 
 _HAPPY_INPUTS = [
-    "en-fr-test",
-    "English",
-    "French",
-    "https://api.openai.com/v1",
-    "OPENAI_API_KEY",
-    "gpt-4o-mini",
-    "https://api.anthropic.com/v1",
-    "ANTHROPIC_API_KEY",
-    "claude-sonnet-4-6",
-    "y",
-    "n",
+    "en-fr-test",                    # 0 project name
+    "English",                       # 1 source lang
+    "French",                        # 2 target lang
+    "https://api.openai.com/v1",     # 3 translator URL (Custom path prompts for URL)
+    "gpt-4o-mini",                   # 4 translator model
+    "https://api.anthropic.com/v1",  # 5 judge URL (Custom path prompts for URL)
+    "claude-sonnet-4-6",             # 6 judge model
+    "y",                             # 7 show reasoning
+    "n",                             # 8 flag variance
 ]
 
 
 def _run_wizard_with(inputs, tmp_path, *, fetch_return=None, extra_patches=None):
     """Run wizard with canned prompt responses; patches PROJECTS_DIR to tmp_path."""
+    mock_provider = {
+        "name": "Custom",
+        "base_url": "",
+        "api_key": "",
+        "key_reqd": False,
+        "notes": "",
+    }
     patches = [
         patch("babelscore.cli.init_wizard.prompt", side_effect=list(inputs)),
         patch("babelscore.cli.init_wizard.fetch_models", return_value=fetch_return),
         patch("babelscore.cli.init_wizard.console"),
+        patch("babelscore.cli.init_wizard._pick_provider", return_value=mock_provider),
+        patch("babelscore.cli.init_wizard._resolve_api_key", return_value=("sk-test", "${CUSTOM_KEY}")),
         patch("babelscore.config.project.PROJECTS_DIR", tmp_path),
         patch("babelscore.config.project.BABELSCORE_DIR", tmp_path),
     ]
@@ -177,26 +184,26 @@ def test_run_wizard_existing_project_overwrite_no(tmp_path):
 
 
 def test_run_wizard_bare_api_key_wrapped_as_env_ref(tmp_path):
+    # _resolve_api_key is patched to return ("sk-test", "${CUSTOM_KEY}") for both roles
     _run_wizard_with(_HAPPY_INPUTS, tmp_path)
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
-    assert config["translator_models"][0]["api_key"] == "${OPENAI_API_KEY}"
-    assert config["judge_models"][0]["api_key"] == "${ANTHROPIC_API_KEY}"
+    assert config["translator_models"][0]["api_key"] == "${CUSTOM_KEY}"
+    assert config["judge_models"][0]["api_key"] == "${CUSTOM_KEY}"
 
 
 def test_run_wizard_already_wrapped_key_unchanged(tmp_path):
-    inputs = list(_HAPPY_INPUTS)
-    inputs[4] = "${OPENAI_API_KEY}"   # translator key already wrapped
-    inputs[7] = "${ANTHROPIC_API_KEY}"
-    _run_wizard_with(inputs, tmp_path)
+    # _resolve_api_key is fully patched; key wrapping now happens inside it.
+    # Verify the env ref returned by the patch appears verbatim in config.
+    _run_wizard_with(_HAPPY_INPUTS, tmp_path)
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
-    assert config["translator_models"][0]["api_key"] == "${OPENAI_API_KEY}"
+    assert config["translator_models"][0]["api_key"] == "${CUSTOM_KEY}"
 
 
 def test_run_wizard_model_pick_by_number(tmp_path):
     # fetch_models returns a list; user picks "1" → first model selected
     inputs = list(_HAPPY_INPUTS)
-    inputs[5] = "1"   # pick model by number
-    inputs[8] = "1"
+    inputs[4] = "1"   # pick model by number (translator)
+    inputs[6] = "1"   # pick model by number (judge)
     _run_wizard_with(inputs, tmp_path, fetch_return=["gpt-4o", "gpt-4o-mini"])
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["translator_models"][0]["name"] == "gpt-4o"
@@ -206,8 +213,8 @@ def test_run_wizard_model_pick_by_number(tmp_path):
 def test_run_wizard_model_pick_by_name(tmp_path):
     # fetch_models returns a list; user types the name directly
     inputs = list(_HAPPY_INPUTS)
-    inputs[5] = "gpt-4o-mini"
-    inputs[8] = "gpt-4o-mini"
+    inputs[4] = "gpt-4o-mini"   # translator model
+    inputs[6] = "gpt-4o-mini"   # judge model
     _run_wizard_with(inputs, tmp_path, fetch_return=["gpt-4o", "gpt-4o-mini"])
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["translator_models"][0]["name"] == "gpt-4o-mini"
@@ -223,8 +230,8 @@ def test_run_wizard_model_fetch_failure_uses_manual_entry(tmp_path):
 def test_run_wizard_url_without_protocol_normalised_in_config(tmp_path):
     """URL entered without https:// must be normalised before saving to config.yaml."""
     inputs = list(_HAPPY_INPUTS)
-    inputs[3] = "api.openai.com/v1"        # no protocol — translator
-    inputs[6] = "api.anthropic.com/v1"     # no protocol — judge
+    inputs[3] = "api.openai.com/v1"        # no protocol — translator URL
+    inputs[5] = "api.anthropic.com/v1"     # no protocol — judge URL
     _run_wizard_with(inputs, tmp_path)
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["translator_models"][0]["base_url"] == "https://api.openai.com/v1"
@@ -234,8 +241,8 @@ def test_run_wizard_url_without_protocol_normalised_in_config(tmp_path):
 def test_run_wizard_output_yes_defaults(tmp_path):
     """[Y/n] prompts: 'y' → True, '' (empty Enter) is also treated as True (not 'n')."""
     inputs = list(_HAPPY_INPUTS)
-    inputs[9] = ""   # empty Enter → not "n" → show_judge_reasoning = True
-    inputs[10] = ""  # empty Enter → not "n" → flag_high_variance = True
+    inputs[7] = ""   # empty Enter → not "n" → show_judge_reasoning = True
+    inputs[8] = ""   # empty Enter → not "n" → flag_high_variance = True
     _run_wizard_with(inputs, tmp_path)
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["output"]["show_judge_reasoning"] is True

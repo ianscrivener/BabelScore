@@ -193,18 +193,26 @@ def run_wizard():
         )
 
         # -- Translator model --
-        console.print("\n[cyan]-- Translator model --[/cyan]")
-        t_url = normalise_url(prompt("Provider base URL (e.g. https://api.openai.com/v1): ").strip())
-        t_key_raw = prompt("API key (or env var name, e.g. OPENAI_API_KEY): ").strip()
-        t_key = f"${{{t_key_raw}}}" if not t_key_raw.startswith("${") else t_key_raw
-        t_model = _pick_model(t_url, t_key_raw)
+        console.print("\n[cyan]── Translator model ──[/cyan]")
+        t_provider = _pick_provider("Translator")
+        if t_provider["name"] == "Custom":
+            t_url = normalise_url(prompt("Base URL (e.g. https://api.openai.com/v1): ").strip())
+        else:
+            t_url_raw = pt_prompt("Base URL: ", default=t_provider["base_url"]).strip()
+            t_url = normalise_url(t_url_raw if t_url_raw else t_provider["base_url"])
+        t_val, t_key = _resolve_api_key(t_provider)
+        t_model = _pick_model(t_url, t_val)
 
         # -- Judge model --
-        console.print("\n[cyan]-- Judge model --[/cyan]")
-        j_url = normalise_url(prompt("Provider base URL: ").strip())
-        j_key_raw = prompt("API key (or env var name): ").strip()
-        j_key = f"${{{j_key_raw}}}" if not j_key_raw.startswith("${") else j_key_raw
-        j_model = _pick_model(j_url, j_key_raw)
+        console.print("\n[cyan]── Judge model ──[/cyan]")
+        j_provider = _pick_provider("Judge")
+        if j_provider["name"] == "Custom":
+            j_url = normalise_url(prompt("Base URL: ").strip())
+        else:
+            j_url_raw = pt_prompt("Base URL: ", default=j_provider["base_url"]).strip()
+            j_url = normalise_url(j_url_raw if j_url_raw else j_provider["base_url"])
+        j_val, j_key = _resolve_api_key(j_provider)
+        j_model = _pick_model(j_url, j_val)
 
         # -- Output options --
         console.print("\n[cyan]-- Output options --[/cyan]")
