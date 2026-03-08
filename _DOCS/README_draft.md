@@ -62,19 +62,27 @@ BabelScore supports five evaluation paradigms depending on your data and goals:
 ## Quickstart (CLI)
 
 ```bash
-# Install
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and set up
 git clone https://github.com/yourusername/babelscore
 cd babelscore
-pip install -e .
+uv sync
+
+# Activate the virtual environment
+source .venv/bin/activate
+# Tip: add this alias to your ~/.zshrc for convenience:
+# alias uvsrc="source .venv/bin/activate"
 
 # Create a new project
-babeltest init
+babelscore init
 
 # Run evaluation
-babeltest run my-project
+babelscore run my-project
 
 # View results
-babeltest results my-project
+babelscore results my-project
 ```
 
 ### Project structure
@@ -127,7 +135,7 @@ BabelScore accepts API keys in order of precedence:
 
 1. Environment variable (e.g. `OPENROUTER_API_KEY`)
 2. Global `~/.babelscore/.env`
-3. Prompted securely during `babeltest init`
+3. Prompted securely during `babelscore init`
 
 All keys stay local. Nothing is sent anywhere except directly to your configured model endpoints.
 
@@ -194,7 +202,7 @@ mistral-7b                |   6.2   |   6.0   |  6.10 | low
 
 ## No Data? We Can Help
 
-If you don't have a test set, `babeltest init` will offer to:
+If you don't have a test set, `babelscore init` will offer to:
 
 - **Find an existing corpus** — BabelScore will suggest relevant public datasets (FLORES-200, OPUS, Tatoeba) for your language pair
 - **Generate synthetic data** — For low-resource languages, BabelScore can use an LLM to generate a parallel corpus from a domain description, which you review before use

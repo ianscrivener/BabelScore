@@ -21,7 +21,7 @@
 |---|---|---|
 | TUI / CLI wizard | Textual | Interactive terminal UI — wizard, live progress, results display |
 | Terminal output | Rich | Tables, markdown rendering, log formatting (Textual dependency) |
-| CLI entrypoint | Click | Command routing — `babeltest init`, `babeltest run`, etc. |
+| CLI entrypoint | Click | Command routing — `babelscore init`, `babelscore run`, etc. |
 | HTTP client | httpx | Async HTTP — all API calls to translator and judge models |
 | Async orchestration | asyncio | Parallel translation and judge calls |
 | Config | PyYAML | Read/write project config.yaml |
@@ -104,10 +104,10 @@ Goal: one translator model, one judge model, Paradigm 2 (one-way, cold judge), 5
 | 5 | `pipeline.py` | Sequential call to translator then judge for one sentence |
 | 6 | `scorer.py` | Mean score, basic output dict |
 | 7 | `results.py` | Rich table printed to terminal |
-| 8 | `babeltest run` | Wire everything together, run from a hand-edited config.yaml |
+| 8 | `babelscore run` | Wire everything together, run from a hand-edited config.yaml |
 | 9 | Manual test | 5 English→French sentences, one translator, one judge, confirm output |
 
-**Exit criteria:** `babeltest run my-project` produces a scorecard from a hand-crafted config.yaml and CSV. No wizard yet.
+**Exit criteria:** `babelscore run my-project` produces a scorecard from a hand-crafted config.yaml and CSV. No wizard yet.
 
 ---
 
@@ -142,7 +142,7 @@ Goal: full paradigm coverage, reference translation support, bidirectional testi
 
 ### Phase 4 — Textual Wizard
 
-Goal: `babeltest init` launches a Textual TUI that walks through the two wizard questions and writes config.yaml.
+Goal: `babelscore init` launches a Textual TUI that walks through the two wizard questions and writes config.yaml.
 
 | Step | Task | Notes |
 |---|---|---|
@@ -153,7 +153,7 @@ Goal: `babeltest init` launches a Textual TUI that walks through the two wizard 
 | 25 | Judge configuration | Add judge models — same fields |
 | 26 | API key handling | Check env → check .env → prompt securely → save to .env |
 | 27 | Write config.yaml | Confirm and save project |
-| 28 | Live run progress | Textual progress panel during `babeltest run` |
+| 28 | Live run progress | Textual progress panel during `babelscore run` |
 
 ---
 

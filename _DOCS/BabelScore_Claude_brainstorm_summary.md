@@ -16,8 +16,8 @@
 | 6 | Init wizard | Designed 2-question wizard: what are you testing (1a/1b/1c) × what data do you have (2a/2b/2c) |
 | 7 | API standard | Mandated OpenAI-compatible API format — covers OpenRouter, Ollama, direct APIs uniformly |
 | 8 | Architecture | Python CLI, per-project YAML config, `~/.babelscore` directory structure |
-| 9 | CLI design | `babeltest init / run / results / list` — channelling Claude Code simplicity |
-| 10 | Naming | Settled on **BabelScore** as metric name, `babeltest` as CLI command |
+| 9 | CLI design | `babelscore init / run / results / list` — channelling Claude Code simplicity |
+| 10 | Naming | Settled on **BabelScore** as metric name, `babelscore` as CLI command |
 | 11 | Tagline | *"Score the translation capability of any LLM. A reproducible, LLM-as-judge based translation quality metric."* |
 | 12 | README | Drafted full README covering metric definition, versioning, paradigms, quickstart, data format |
 | 13 | Three interfaces | CLI wizard, YAML+CLI headless, Streamlit UI |
@@ -53,10 +53,10 @@ All translator and judge models must expose an OpenAI-compatible chat completion
 Projects are stored in `~/.babelscore/projects/[project-name]/` with a `config.yaml`, a `data/` directory, and a `results/` directory. API keys are stored globally in `~/.babelscore/.env` and never committed. The YAML config is the canonical project state regardless of how it was created — wizard, manual edit, or UI.
 
 ### 9. CLI Design
-The CLI surface follows the `babeltest [verb] [project]` pattern: `init`, `run`, `results`, `list`, `config`, and `ui`. The design is consciously modelled on Claude Code's CLI — familiar, minimal, and opinionated. The `init` command drives the wizard; all other commands operate on named projects.
+The CLI surface follows the `babelscore [verb] [project]` pattern: `init`, `run`, `results`, `list`, `config`, and `ui`. The design is consciously modelled on Claude Code's CLI — familiar, minimal, and opinionated. The `init` command drives the wizard; all other commands operate on named projects.
 
 ### 10. Naming
-Several creative options were considered including Gauntlet, Gloss, Crucible, and Translucent. BabelScore was chosen for its immediate cultural legibility — the Tower of Babel is universally understood as a symbol of language complexity — combined with the precision of "Score" signalling a measurable metric. The CLI command `babeltest` was chosen as the natural imperative form.
+Several creative options were considered including Gauntlet, Gloss, Crucible, and Translucent. BabelScore was chosen for its immediate cultural legibility — the Tower of Babel is universally understood as a symbol of language complexity — combined with the precision of "Score" signalling a measurable metric. The CLI command `babelscore` was chosen as the natural imperative form.
 
 ### 11. Tagline
 The final tagline — *"Score the translation capability of any LLM. A reproducible, LLM-as-judge based translation quality metric."* — was arrived at collaboratively. The first sentence is the action; the second is the differentiator. Together they answer "what does it do" and "why is it different" in under twenty words.
