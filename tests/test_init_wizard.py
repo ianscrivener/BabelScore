@@ -289,3 +289,73 @@ def test_pick_provider_reprompts_on_unknown():
         from babelscore.cli.init_wizard import _pick_provider
         result = _pick_provider("Translator")
     assert result["name"] == "Ollama"
+
+
+import os
+
+
+def test_resolve_api_key_not_required_returns_empty():
+    from babelscore.cli.init_wizard import _resolve_api_key
+    val, ref = _resolve_api_key({"key_reqd": False, "api_key": ""})
+    assert val == ""
+    assert ref == ""
+
+
+def test_resolve_api_key_found_in_env():
+    from babelscore.cli.init_wizard import _resolve_api_key
+    provider = {"key_reqd": True, "api_key": "${OPENAI_API_KEY}"}
+    with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-from-env"}):
+        val, ref = _resolve_api_key(provider)
+    assert val == "sk-from-env"
+    assert ref == "${OPENAI_API_KEY}"
+
+
+def test_resolve_api_key_found_in_dot_env(tmp_path):
+    from babelscore.cli.init_wizard import _resolve_api_key
+    env_file = tmp_path / ".env"
+    env_file.write_text("OPENAI_API_KEY=sk-from-file\n")
+    provider = {"key_reqd": True, "api_key": "${OPENAI_API_KEY}"}
+    saved = os.environ.pop("OPENAI_API_KEY", None)
+    try:
+        with patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path), \
+             patch("babelscore.cli.init_wizard.console"):
+            val, ref = _resolve_api_key(provider)
+    finally:
+        if saved is not None:
+            os.environ["OPENAI_API_KEY"] = saved
+    assert val == "sk-from-file"
+    assert ref == "${OPENAI_API_KEY}"
+
+
+def test_resolve_api_key_prompts_and_saves_when_missing(tmp_path):
+    from babelscore.cli.init_wizard import _resolve_api_key
+    provider = {"key_reqd": True, "api_key": "${OPENAI_API_KEY}"}
+    saved = os.environ.pop("OPENAI_API_KEY", None)
+    try:
+        with patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path), \
+             patch("babelscore.config.project.BABELSCORE_DIR", tmp_path), \
+             patch("babelscore.cli.init_wizard.prompt", return_value="sk-entered"), \
+             patch("babelscore.cli.init_wizard.console"):
+            val, ref = _resolve_api_key(provider)
+    finally:
+        if saved is not None:
+            os.environ["OPENAI_API_KEY"] = saved
+    assert val == "sk-entered"
+    assert ref == "${OPENAI_API_KEY}"
+    assert "OPENAI_API_KEY=sk-entered" in (tmp_path / ".env").read_text()
+
+
+def test_resolve_api_key_reprompts_on_empty(tmp_path):
+    from babelscore.cli.init_wizard import _resolve_api_key
+    provider = {"key_reqd": True, "api_key": "${MY_KEY}"}
+    saved = os.environ.pop("MY_KEY", None)
+    try:
+        with patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path), \
+             patch("babelscore.config.project.BABELSCORE_DIR", tmp_path), \
+             patch("babelscore.cli.init_wizard.prompt", side_effect=["", "sk-valid"]), \
+             patch("babelscore.cli.init_wizard.console"):
+            val, ref = _resolve_api_key(provider)
+    finally:
+        if saved is not None:
+            os.environ["MY_KEY"] = saved
+    assert val == "sk-valid"

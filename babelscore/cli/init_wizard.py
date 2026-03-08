@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -8,7 +9,13 @@ from prompt_toolkit.shortcuts import prompt as pt_prompt
 from rich.console import Console
 from rich.panel import Panel
 
-from babelscore.config.project import create_project, project_exists, save_model_cache
+from babelscore.config.project import (
+    BABELSCORE_DIR,
+    create_project,
+    project_exists,
+    save_model_cache,
+    write_env_key,
+)
 
 console = Console()
 
@@ -48,6 +55,45 @@ def _pick_provider(role: str) -> dict:
         if raw in name_map:
             return name_map[raw]
         console.print(f"[yellow]Unknown provider '{raw}'. Pick from the dropdown.[/yellow]")
+
+
+def _resolve_api_key(provider: dict) -> tuple[str, str]:
+    """Return (raw_value, env_ref) for the provider's API key.
+
+    Lookup: os.environ → ~/.babelscore/.env → prompt → write to .env
+    Returns ("", "") for providers that don't require a key.
+    """
+    if not provider.get("key_reqd", False):
+        return "", ""
+
+    api_key_field = provider.get("api_key", "")
+    var_name = api_key_field.strip("${}") if api_key_field.startswith("${") else api_key_field
+
+    # 1. Check os.environ
+    value = os.environ.get(var_name, "")
+
+    # 2. Check ~/.babelscore/.env
+    if not value:
+        env_path = BABELSCORE_DIR / ".env"
+        if env_path.exists():
+            for line in env_path.read_text().splitlines():
+                if line.startswith(f"{var_name}="):
+                    value = line.split("=", 1)[1].strip()
+                    break
+
+    if value:
+        console.print(f"[dim]Using ${{{var_name}}} ✓[/dim]")
+        return value, f"${{{var_name}}}"
+
+    # 3. Prompt and save
+    while not value:
+        value = prompt(f"Enter value for {var_name}: ", password=True).strip()
+        if not value:
+            console.print("[red]API key cannot be empty.[/red]")
+
+    write_env_key(var_name, value)
+    console.print(f"[dim]Saved {var_name} to ~/.babelscore/.env[/dim]")
+    return value, f"${{{var_name}}}"
 
 
 def normalise_url(url: str) -> str:
