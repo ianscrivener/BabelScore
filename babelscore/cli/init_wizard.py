@@ -10,6 +10,13 @@ from babelscore.config.project import create_project, project_exists, save_model
 console = Console()
 
 
+def normalise_url(url: str) -> str:
+    """Prepend https:// if no protocol is present."""
+    if url and not url.startswith(("http://", "https://")):
+        return "https://" + url
+    return url
+
+
 def slug_from_url(base_url: str) -> str:
     """Extract hostname from base_url to use as provider cache key."""
     return urlparse(base_url).hostname or base_url
@@ -101,14 +108,14 @@ def run_wizard():
 
         # -- Translator model --
         console.print("\n[cyan]-- Translator model --[/cyan]")
-        t_url = prompt("Provider base URL (e.g. https://api.openai.com/v1): ").strip()
+        t_url = normalise_url(prompt("Provider base URL (e.g. https://api.openai.com/v1): ").strip())
         t_key_raw = prompt("API key (or env var name, e.g. OPENAI_API_KEY): ").strip()
         t_key = f"${{{t_key_raw}}}" if not t_key_raw.startswith("${") else t_key_raw
         t_model = _pick_model(t_url, t_key_raw)
 
         # -- Judge model --
         console.print("\n[cyan]-- Judge model --[/cyan]")
-        j_url = prompt("Provider base URL: ").strip()
+        j_url = normalise_url(prompt("Provider base URL: ").strip())
         j_key_raw = prompt("API key (or env var name): ").strip()
         j_key = f"${{{j_key_raw}}}" if not j_key_raw.startswith("${") else j_key_raw
         j_model = _pick_model(j_url, j_key_raw)
