@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
@@ -8,6 +10,26 @@ from rich.panel import Panel
 from babelscore.config.project import create_project, project_exists, save_model_cache
 
 console = Console()
+
+_CONFIG_PATH = Path(__file__).parent / "config.json"
+
+_CUSTOM_PROVIDER = {
+    "name": "Custom",
+    "base_url": "",
+    "api_key": "",
+    "key_reqd": False,
+    "notes": "Enter your own base URL and API key.",
+}
+
+
+def load_providers() -> list[dict]:
+    """Load provider list from config.json with Custom prepended."""
+    try:
+        data = json.loads(_CONFIG_PATH.read_text())
+        return [_CUSTOM_PROVIDER] + list(data["llms"].values())
+    except Exception:
+        console.print("[yellow]Warning: could not load config.json — using Custom only.[/yellow]")
+        return [_CUSTOM_PROVIDER]
 
 
 def normalise_url(url: str) -> str:

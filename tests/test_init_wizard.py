@@ -1,4 +1,6 @@
 import yaml
+from pathlib import Path
+import json
 from unittest.mock import patch, MagicMock
 from babelscore.cli.init_wizard import (
     fetch_models,
@@ -238,3 +240,29 @@ def test_run_wizard_output_yes_defaults(tmp_path):
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["output"]["show_judge_reasoning"] is True
     assert config["output"]["flag_high_variance"] is True
+
+
+def test_load_providers_custom_is_first():
+    from babelscore.cli.init_wizard import load_providers
+    providers = load_providers()
+    assert providers[0]["name"] == "Custom"
+
+
+def test_load_providers_returns_config_providers():
+    from babelscore.cli.init_wizard import load_providers
+    providers = load_providers()
+    names = [p["name"] for p in providers]
+    assert "OpenAI" in names
+    assert "Anthropic" in names
+    assert "Ollama" in names
+
+
+def test_load_providers_fallback_on_bad_config(tmp_path):
+    bad_config = tmp_path / "config.json"
+    bad_config.write_text("not json {{")
+    with patch("babelscore.cli.init_wizard._CONFIG_PATH", bad_config), \
+         patch("babelscore.cli.init_wizard.console"):
+        from babelscore.cli.init_wizard import load_providers
+        providers = load_providers()
+    assert len(providers) == 1
+    assert providers[0]["name"] == "Custom"
