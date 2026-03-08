@@ -1,7 +1,7 @@
 [project]
 name = "babelscore"
 version = "0.1.0"
-description = "Add your description here"
+description = "Score the translation capability of any LLM. A reproducible, LLM-as-judge based translation quality metric."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,3 +12,8 @@ dependencies = [
 
 [project.scripts]
 babelscore = "babelscore.cli.main:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

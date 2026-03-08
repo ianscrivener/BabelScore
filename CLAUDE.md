@@ -17,7 +17,7 @@ The alias `uvsrc` is available in the user's shell (`alias uvsrc="source .venv/b
 
 ## Tooling
 - Python 3.12 (pin in pyproject.toml)
-- UV for package management (not pip)
+- UV for package management (not pip) — always use `uv add <package>` to install, never edit pyproject.toml dependencies directly
 - Ruff for linting and formatting
 - Pydantic for config validation
 - Click for CLI routing
