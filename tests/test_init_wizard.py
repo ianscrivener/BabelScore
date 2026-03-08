@@ -43,3 +43,24 @@ def test_fetch_models_empty_data_returns_none():
     with patch("babelscore.cli.init_wizard.httpx.get", return_value=mock_response):
         models = fetch_models("https://api.openai.com/v1", "sk-test")
     assert models is None
+
+
+def test_run_wizard_cancelled_writes_nothing(tmp_path):
+    """Ctrl+C during wizard must not create any files."""
+    with patch("babelscore.cli.init_wizard.prompt", side_effect=KeyboardInterrupt), \
+         patch("babelscore.config.project.PROJECTS_DIR", tmp_path):
+        from babelscore.cli.init_wizard import run_wizard
+        run_wizard()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_run_wizard_existing_project_warns(tmp_path):
+    """If project already exists, wizard warns before proceeding."""
+    with patch("babelscore.config.project.PROJECTS_DIR", tmp_path), \
+         patch("babelscore.cli.init_wizard.project_exists", return_value=True), \
+         patch("babelscore.cli.init_wizard.prompt", side_effect=["my-project", KeyboardInterrupt]), \
+         patch("babelscore.cli.init_wizard.console") as mock_console:
+        from babelscore.cli.init_wizard import run_wizard
+        run_wizard()
+    printed = " ".join(str(c) for c in mock_console.print.call_args_list)
+    assert "already exists" in printed.lower() or "exist" in printed.lower()
