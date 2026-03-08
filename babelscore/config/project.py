@@ -18,7 +18,9 @@ def create_project(config: dict) -> Path:
     (proj_dir / "results").mkdir(parents=True, exist_ok=True)
 
     config_path = proj_dir / "config.yaml"
-    config_path.write_text(yaml.dump(config, default_flow_style=False, allow_unicode=True))
+    config_path.write_text(
+        yaml.dump(config, default_flow_style=False, allow_unicode=True)
+    )
 
     return proj_dir
 

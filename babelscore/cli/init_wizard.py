@@ -1,6 +1,11 @@
 from urllib.parse import urlparse
+
 import httpx
+from prompt_toolkit.shortcuts import prompt as pt_prompt
 from rich.console import Console
+from rich.panel import Panel
+
+from babelscore.config.project import create_project, project_exists, save_model_cache
 
 console = Console()
 
@@ -36,11 +41,6 @@ def fetch_models(base_url: str, api_key: str) -> list[str] | None:
     return models
 
 
-from prompt_toolkit.shortcuts import prompt as pt_prompt
-from rich.panel import Panel
-from babelscore.config.project import create_project, project_exists, save_model_cache
-
-
 def prompt(message: str, *, password: bool = False) -> str:
     """Thin wrapper so tests can patch a single symbol."""
     return pt_prompt(message, is_password=password)
@@ -69,12 +69,14 @@ def _pick_model(base_url: str, api_key: str) -> str:
 
 
 def run_wizard():
-    console.print(Panel(
-        "Answer each prompt to set up your project.\n"
-        "[dim]Press Ctrl+C at any time to cancel \u2014 nothing will be saved.[/dim]",
-        title="/init \u2014 New Project",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            "Answer each prompt to set up your project.\n"
+            "[dim]Press Ctrl+C at any time to cancel \u2014 nothing will be saved.[/dim]",
+            title="/init \u2014 New Project",
+            border_style="cyan",
+        )
+    )
 
     try:
         # -- Project metadata --
@@ -93,7 +95,9 @@ def run_wizard():
         source_lang = prompt("Source language (e.g. English): ").strip()
         target_lang = prompt("Target language (e.g. French): ").strip()
 
-        console.print("[dim]Paradigm: 2 (one-way cold judge) \u2014 fixed for Phase 1[/dim]")
+        console.print(
+            "[dim]Paradigm: 2 (one-way cold judge) \u2014 fixed for Phase 1[/dim]"
+        )
 
         # -- Translator model --
         console.print("\n[cyan]-- Translator model --[/cyan]")
@@ -122,9 +126,7 @@ def run_wizard():
             "translator_models": [
                 {"name": t_model, "base_url": t_url, "api_key": t_key}
             ],
-            "judge_models": [
-                {"name": j_model, "base_url": j_url, "api_key": j_key}
-            ],
+            "judge_models": [{"name": j_model, "base_url": j_url, "api_key": j_key}],
             "output": {
                 "format": "markdown",
                 "show_judge_reasoning": show_reasoning != "n",
@@ -138,13 +140,15 @@ def run_wizard():
         console.print("\n[dim]Init cancelled. No files written.[/dim]")
         return
 
-    console.print(Panel(
-        f"[green]Project created:[/green] {proj_dir}\n\n"
-        f"  Source: {source_lang} \u2192 {target_lang}\n"
-        f"  Translator: {t_model}\n"
-        f"  Judge:      {j_model}\n\n"
-        f"[dim]Add source sentences to {proj_dir}/data/test_set.csv\n"
-        f"Then run: babelscore run {name}[/dim]",
-        title="Project created",
-        border_style="green",
-    ))
+    console.print(
+        Panel(
+            f"[green]Project created:[/green] {proj_dir}\n\n"
+            f"  Source: {source_lang} \u2192 {target_lang}\n"
+            f"  Translator: {t_model}\n"
+            f"  Judge:      {j_model}\n\n"
+            f"[dim]Add source sentences to {proj_dir}/data/test_set.csv\n"
+            f"Then run: babelscore run {name}[/dim]",
+            title="Project created",
+            border_style="green",
+        )
+    )
