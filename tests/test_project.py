@@ -1,3 +1,4 @@
+import json
 import pytest
 import yaml
 from pathlib import Path
@@ -51,3 +52,13 @@ def test_project_exists_true(tmp_path):
 def test_project_exists_false(tmp_path):
     with patch("babelscore.config.project.PROJECTS_DIR", tmp_path):
         assert project_exists("no-such-proj") is False
+
+
+def test_save_model_cache_writes_json(tmp_path):
+    with patch("babelscore.config.project.BABELSCORE_DIR", tmp_path):
+        from babelscore.config.project import save_model_cache
+        save_model_cache("api.openai.com", ["gpt-4o", "gpt-4o-mini"])
+    cache_path = tmp_path / "providers" / "api.openai.com" / "models.json"
+    assert cache_path.exists()
+    data = json.loads(cache_path.read_text())
+    assert "gpt-4o" in data

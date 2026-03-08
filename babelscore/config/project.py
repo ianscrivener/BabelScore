@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import yaml
 
@@ -20,3 +21,10 @@ def create_project(config: dict) -> Path:
     config_path.write_text(yaml.dump(config, default_flow_style=False, allow_unicode=True))
 
     return proj_dir
+
+
+def save_model_cache(provider_slug: str, models: list[str]) -> None:
+    """Cache model list for a provider."""
+    cache_dir = BABELSCORE_DIR / "providers" / provider_slug
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    (cache_dir / "models.json").write_text(json.dumps(models, indent=2))
