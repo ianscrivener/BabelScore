@@ -9,3 +9,6 @@ dependencies = [
     "prompt-toolkit>=3.0.52",
     "rich>=14.3.3",
 ]
+
+[project.scripts]
+babelscore = "babelscore.cli.main:main"
