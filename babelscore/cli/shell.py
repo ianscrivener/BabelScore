@@ -5,6 +5,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
+from babelscore.cli.init_wizard import run_wizard
 
 console = Console()
 
@@ -41,15 +42,7 @@ def print_banner():
 
 
 def cmd_init():
-    console.print(Panel(
-        "BabelScore project initialisation\n\n"
-        "This command will guide you through creating a new\n"
-        "evaluation project — language pair, translator models,\n"
-        "judge models, and test data.\n\n"
-        "[dim]Coming soon.[/dim]",
-        title="/init",
-        border_style="cyan",
-    ))
+    run_wizard()
 
 
 def cmd_help():
