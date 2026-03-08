@@ -2,6 +2,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
@@ -84,10 +85,13 @@ def dispatch(text: str):
 
 def run_shell():
     print_banner()
+    completer = WordCompleter(list(COMMANDS.keys()), match_middle=False)
     session = PromptSession(
         message=[("class:prompt", "> ")],
         style=PROMPT_STYLE,
         key_bindings=bindings,
+        completer=completer,
+        complete_while_typing=True,
     )
     while True:
         try:
