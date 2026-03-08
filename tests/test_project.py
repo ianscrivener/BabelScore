@@ -10,10 +10,18 @@ SAMPLE_CONFIG = {
     "source_language": "English",
     "target_language": "French",
     "translator_models": [
-        {"name": "gpt-4o-mini", "base_url": "https://api.openai.com/v1", "api_key": "${OPENAI_API_KEY}"}
+        {
+            "name": "gpt-4o-mini",
+            "base_url": "https://api.openai.com/v1",
+            "api_key": "${OPENAI_API_KEY}",
+        }
     ],
     "judge_models": [
-        {"name": "claude-sonnet-4-6", "base_url": "https://api.anthropic.com/v1", "api_key": "${ANTHROPIC_API_KEY}"}
+        {
+            "name": "claude-sonnet-4-6",
+            "base_url": "https://api.anthropic.com/v1",
+            "api_key": "${ANTHROPIC_API_KEY}",
+        }
     ],
     "output": {
         "format": "markdown",
@@ -55,6 +63,7 @@ def test_project_exists_false(tmp_path):
 def test_save_model_cache_writes_json(tmp_path):
     with patch("babelscore.config.project.BABELSCORE_DIR", tmp_path):
         from babelscore.config.project import save_model_cache
+
         save_model_cache("api.openai.com", ["gpt-4o", "gpt-4o-mini"])
     cache_path = tmp_path / "providers" / "api.openai.com" / "models.json"
     assert cache_path.exists()
@@ -65,6 +74,7 @@ def test_save_model_cache_writes_json(tmp_path):
 def test_write_env_key_creates_file(tmp_path):
     with patch("babelscore.config.project.BABELSCORE_DIR", tmp_path):
         from babelscore.config.project import write_env_key
+
         write_env_key("OPENAI_API_KEY", "sk-abc123")
     env_path = tmp_path / ".env"
     assert env_path.exists()
@@ -76,6 +86,7 @@ def test_write_env_key_appends_to_existing(tmp_path):
     env_path.write_text("EXISTING_KEY=already-here\n")
     with patch("babelscore.config.project.BABELSCORE_DIR", tmp_path):
         from babelscore.config.project import write_env_key
+
         write_env_key("NEW_KEY", "new-value")
     content = env_path.read_text()
     assert "EXISTING_KEY=already-here" in content
@@ -86,5 +97,6 @@ def test_write_env_key_creates_parent_dirs(tmp_path):
     nested = tmp_path / "nested"
     with patch("babelscore.config.project.BABELSCORE_DIR", nested):
         from babelscore.config.project import write_env_key
+
         write_env_key("FOO", "bar")
     assert (nested / ".env").exists()

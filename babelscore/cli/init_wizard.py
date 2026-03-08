@@ -36,7 +36,9 @@ def load_providers() -> list[dict]:
         data = json.loads(_CONFIG_PATH.read_text())
         return [_CUSTOM_PROVIDER] + list(data["llms"].values())
     except Exception:
-        console.print("[yellow]Warning: could not load config.json — using Custom only.[/yellow]")
+        console.print(
+            "[yellow]Warning: could not load config.json — using Custom only.[/yellow]"
+        )
         return [_CUSTOM_PROVIDER]
 
 
@@ -54,7 +56,9 @@ def _pick_provider(role: str) -> dict:
         ).strip()
         if raw in name_map:
             return name_map[raw]
-        console.print(f"[yellow]Unknown provider '{raw}'. Pick from the dropdown.[/yellow]")
+        console.print(
+            f"[yellow]Unknown provider '{raw}'. Pick from the dropdown.[/yellow]"
+        )
 
 
 def _resolve_api_key(provider: dict) -> tuple[str, str]:
@@ -67,7 +71,9 @@ def _resolve_api_key(provider: dict) -> tuple[str, str]:
         return "", ""
 
     api_key_field = provider.get("api_key", "")
-    var_name = api_key_field.strip("${}") if api_key_field.startswith("${") else api_key_field
+    var_name = (
+        api_key_field.strip("${}") if api_key_field.startswith("${") else api_key_field
+    )
 
     # 1. Check os.environ
     value = os.environ.get(var_name, "")
@@ -196,7 +202,9 @@ def run_wizard():
         console.print("\n[cyan]── Translator model ──[/cyan]")
         t_provider = _pick_provider("Translator")
         if t_provider["name"] == "Custom":
-            t_url = normalise_url(prompt("Base URL (e.g. https://api.openai.com/v1): ").strip())
+            t_url = normalise_url(
+                prompt("Base URL (e.g. https://api.openai.com/v1): ").strip()
+            )
         else:
             t_url_raw = pt_prompt("Base URL: ", default=t_provider["base_url"]).strip()
             t_url = normalise_url(t_url_raw if t_url_raw else t_provider["base_url"])

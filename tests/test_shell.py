@@ -40,6 +40,7 @@ def test_all_commands_registered():
 
 # ── run_shell integration tests (prompt_toolkit pipe input) ───────────────────
 
+
 def test_run_shell_quit_exits_cleanly():
     with create_pipe_input() as inp:
         inp.send_text("/quit\n")

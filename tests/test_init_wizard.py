@@ -1,6 +1,6 @@
+import os
+
 import yaml
-from pathlib import Path
-import json
 from unittest.mock import patch, MagicMock
 from babelscore.cli.init_wizard import (
     fetch_models,
@@ -30,7 +30,9 @@ def test_fetch_models_success():
 
 
 def test_fetch_models_http_error_returns_none():
-    with patch("babelscore.cli.init_wizard.httpx.get", side_effect=Exception("timeout")):
+    with patch(
+        "babelscore.cli.init_wizard.httpx.get", side_effect=Exception("timeout")
+    ):
         models = fetch_models("https://api.openai.com/v1", "sk-test")
     assert models is None
 
@@ -54,25 +56,34 @@ def test_fetch_models_empty_data_returns_none():
 
 def test_run_wizard_cancelled_writes_nothing(tmp_path):
     """Ctrl+C during wizard must not create any files."""
-    with patch("babelscore.cli.init_wizard.prompt", side_effect=KeyboardInterrupt), \
-         patch("babelscore.config.project.PROJECTS_DIR", tmp_path):
+    with (
+        patch("babelscore.cli.init_wizard.prompt", side_effect=KeyboardInterrupt),
+        patch("babelscore.config.project.PROJECTS_DIR", tmp_path),
+    ):
         from babelscore.cli.init_wizard import run_wizard
+
         run_wizard()
     assert list(tmp_path.iterdir()) == []
 
 
 def test_run_wizard_existing_project_warns(tmp_path):
     """If project already exists, wizard warns before proceeding."""
-    with patch("babelscore.config.project.PROJECTS_DIR", tmp_path), \
-         patch("babelscore.cli.init_wizard.project_exists", return_value=True), \
-         patch("babelscore.cli.init_wizard.prompt", side_effect=["my-project", KeyboardInterrupt]), \
-         patch("babelscore.cli.init_wizard.console") as mock_console:
+    with (
+        patch("babelscore.config.project.PROJECTS_DIR", tmp_path),
+        patch("babelscore.cli.init_wizard.project_exists", return_value=True),
+        patch(
+            "babelscore.cli.init_wizard.prompt",
+            side_effect=["my-project", KeyboardInterrupt],
+        ),
+        patch("babelscore.cli.init_wizard.console") as mock_console,
+    ):
         run_wizard()
     printed = " ".join(str(c) for c in mock_console.print.call_args_list)
     assert "already exists" in printed.lower() or "exist" in printed.lower()
 
 
 # ── normalise_url ──────────────────────────────────────────────────────────────
+
 
 def test_normalise_url_adds_https():
     assert normalise_url("api.openai.com/v1") == "https://api.openai.com/v1"
@@ -106,15 +117,15 @@ def test_normalise_url_empty_string():
 # 10  flag variance  [Y/n]
 
 _HAPPY_INPUTS = [
-    "en-fr-test",                    # 0 project name
-    "English",                       # 1 source lang
-    "French",                        # 2 target lang
-    "https://api.openai.com/v1",     # 3 translator URL (Custom path prompts for URL)
-    "gpt-4o-mini",                   # 4 translator model
+    "en-fr-test",  # 0 project name
+    "English",  # 1 source lang
+    "French",  # 2 target lang
+    "https://api.openai.com/v1",  # 3 translator URL (Custom path prompts for URL)
+    "gpt-4o-mini",  # 4 translator model
     "https://api.anthropic.com/v1",  # 5 judge URL (Custom path prompts for URL)
-    "claude-sonnet-4-6",             # 6 judge model
-    "y",                             # 7 show reasoning
-    "n",                             # 8 flag variance
+    "claude-sonnet-4-6",  # 6 judge model
+    "y",  # 7 show reasoning
+    "n",  # 8 flag variance
 ]
 
 
@@ -132,7 +143,10 @@ def _run_wizard_with(inputs, tmp_path, *, fetch_return=None, extra_patches=None)
         patch("babelscore.cli.init_wizard.fetch_models", return_value=fetch_return),
         patch("babelscore.cli.init_wizard.console"),
         patch("babelscore.cli.init_wizard._pick_provider", return_value=mock_provider),
-        patch("babelscore.cli.init_wizard._resolve_api_key", return_value=("sk-test", "${CUSTOM_KEY}")),
+        patch(
+            "babelscore.cli.init_wizard._resolve_api_key",
+            return_value=("sk-test", "${CUSTOM_KEY}"),
+        ),
         patch("babelscore.config.project.PROJECTS_DIR", tmp_path),
         patch("babelscore.config.project.BABELSCORE_DIR", tmp_path),
     ]
@@ -202,8 +216,8 @@ def test_run_wizard_already_wrapped_key_unchanged(tmp_path):
 def test_run_wizard_model_pick_by_number(tmp_path):
     # fetch_models returns a list; user picks "1" → first model selected
     inputs = list(_HAPPY_INPUTS)
-    inputs[4] = "1"   # pick model by number (translator)
-    inputs[6] = "1"   # pick model by number (judge)
+    inputs[4] = "1"  # pick model by number (translator)
+    inputs[6] = "1"  # pick model by number (judge)
     _run_wizard_with(inputs, tmp_path, fetch_return=["gpt-4o", "gpt-4o-mini"])
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["translator_models"][0]["name"] == "gpt-4o"
@@ -213,8 +227,8 @@ def test_run_wizard_model_pick_by_number(tmp_path):
 def test_run_wizard_model_pick_by_name(tmp_path):
     # fetch_models returns a list; user types the name directly
     inputs = list(_HAPPY_INPUTS)
-    inputs[4] = "gpt-4o-mini"   # translator model
-    inputs[6] = "gpt-4o-mini"   # judge model
+    inputs[4] = "gpt-4o-mini"  # translator model
+    inputs[6] = "gpt-4o-mini"  # judge model
     _run_wizard_with(inputs, tmp_path, fetch_return=["gpt-4o", "gpt-4o-mini"])
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["translator_models"][0]["name"] == "gpt-4o-mini"
@@ -230,8 +244,8 @@ def test_run_wizard_model_fetch_failure_uses_manual_entry(tmp_path):
 def test_run_wizard_url_without_protocol_normalised_in_config(tmp_path):
     """URL entered without https:// must be normalised before saving to config.yaml."""
     inputs = list(_HAPPY_INPUTS)
-    inputs[3] = "api.openai.com/v1"        # no protocol — translator URL
-    inputs[5] = "api.anthropic.com/v1"     # no protocol — judge URL
+    inputs[3] = "api.openai.com/v1"  # no protocol — translator URL
+    inputs[5] = "api.anthropic.com/v1"  # no protocol — judge URL
     _run_wizard_with(inputs, tmp_path)
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["translator_models"][0]["base_url"] == "https://api.openai.com/v1"
@@ -241,8 +255,8 @@ def test_run_wizard_url_without_protocol_normalised_in_config(tmp_path):
 def test_run_wizard_output_yes_defaults(tmp_path):
     """[Y/n] prompts: 'y' → True, '' (empty Enter) is also treated as True (not 'n')."""
     inputs = list(_HAPPY_INPUTS)
-    inputs[7] = ""   # empty Enter → not "n" → show_judge_reasoning = True
-    inputs[8] = ""   # empty Enter → not "n" → flag_high_variance = True
+    inputs[7] = ""  # empty Enter → not "n" → show_judge_reasoning = True
+    inputs[8] = ""  # empty Enter → not "n" → flag_high_variance = True
     _run_wizard_with(inputs, tmp_path)
     config = yaml.safe_load((tmp_path / "en-fr-test" / "config.yaml").read_text())
     assert config["output"]["show_judge_reasoning"] is True
@@ -251,12 +265,14 @@ def test_run_wizard_output_yes_defaults(tmp_path):
 
 def test_load_providers_custom_is_first():
     from babelscore.cli.init_wizard import load_providers
+
     providers = load_providers()
     assert providers[0]["name"] == "Custom"
 
 
 def test_load_providers_returns_config_providers():
     from babelscore.cli.init_wizard import load_providers
+
     providers = load_providers()
     names = [p["name"] for p in providers]
     assert "OpenAI" in names
@@ -267,9 +283,12 @@ def test_load_providers_returns_config_providers():
 def test_load_providers_fallback_on_bad_config(tmp_path):
     bad_config = tmp_path / "config.json"
     bad_config.write_text("not json {{")
-    with patch("babelscore.cli.init_wizard._CONFIG_PATH", bad_config), \
-         patch("babelscore.cli.init_wizard.console"):
+    with (
+        patch("babelscore.cli.init_wizard._CONFIG_PATH", bad_config),
+        patch("babelscore.cli.init_wizard.console"),
+    ):
         from babelscore.cli.init_wizard import load_providers
+
         providers = load_providers()
     assert len(providers) == 1
     assert providers[0]["name"] == "Custom"
@@ -278,6 +297,7 @@ def test_load_providers_fallback_on_bad_config(tmp_path):
 def test_pick_provider_returns_matching_provider():
     with patch("babelscore.cli.init_wizard.pt_prompt", return_value="OpenAI"):
         from babelscore.cli.init_wizard import _pick_provider
+
         result = _pick_provider("Translator")
     assert result["name"] == "OpenAI"
     assert result["base_url"] == "https://api.openai.com/v1"
@@ -286,23 +306,27 @@ def test_pick_provider_returns_matching_provider():
 def test_pick_provider_custom_returns_custom_dict():
     with patch("babelscore.cli.init_wizard.pt_prompt", return_value="Custom"):
         from babelscore.cli.init_wizard import _pick_provider
+
         result = _pick_provider("Judge")
     assert result["name"] == "Custom"
 
 
 def test_pick_provider_reprompts_on_unknown():
-    with patch("babelscore.cli.init_wizard.pt_prompt", side_effect=["garbage", "Ollama"]), \
-         patch("babelscore.cli.init_wizard.console"):
+    with (
+        patch(
+            "babelscore.cli.init_wizard.pt_prompt", side_effect=["garbage", "Ollama"]
+        ),
+        patch("babelscore.cli.init_wizard.console"),
+    ):
         from babelscore.cli.init_wizard import _pick_provider
+
         result = _pick_provider("Translator")
     assert result["name"] == "Ollama"
 
 
-import os
-
-
 def test_resolve_api_key_not_required_returns_empty():
     from babelscore.cli.init_wizard import _resolve_api_key
+
     val, ref = _resolve_api_key({"key_reqd": False, "api_key": ""})
     assert val == ""
     assert ref == ""
@@ -310,6 +334,7 @@ def test_resolve_api_key_not_required_returns_empty():
 
 def test_resolve_api_key_found_in_env():
     from babelscore.cli.init_wizard import _resolve_api_key
+
     provider = {"key_reqd": True, "api_key": "${OPENAI_API_KEY}"}
     with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-from-env"}):
         val, ref = _resolve_api_key(provider)
@@ -319,13 +344,16 @@ def test_resolve_api_key_found_in_env():
 
 def test_resolve_api_key_found_in_dot_env(tmp_path):
     from babelscore.cli.init_wizard import _resolve_api_key
+
     env_file = tmp_path / ".env"
     env_file.write_text("OPENAI_API_KEY=sk-from-file\n")
     provider = {"key_reqd": True, "api_key": "${OPENAI_API_KEY}"}
     saved = os.environ.pop("OPENAI_API_KEY", None)
     try:
-        with patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path), \
-             patch("babelscore.cli.init_wizard.console"):
+        with (
+            patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path),
+            patch("babelscore.cli.init_wizard.console"),
+        ):
             val, ref = _resolve_api_key(provider)
     finally:
         if saved is not None:
@@ -336,13 +364,16 @@ def test_resolve_api_key_found_in_dot_env(tmp_path):
 
 def test_resolve_api_key_prompts_and_saves_when_missing(tmp_path):
     from babelscore.cli.init_wizard import _resolve_api_key
+
     provider = {"key_reqd": True, "api_key": "${OPENAI_API_KEY}"}
     saved = os.environ.pop("OPENAI_API_KEY", None)
     try:
-        with patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path), \
-             patch("babelscore.config.project.BABELSCORE_DIR", tmp_path), \
-             patch("babelscore.cli.init_wizard.prompt", return_value="sk-entered"), \
-             patch("babelscore.cli.init_wizard.console"):
+        with (
+            patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path),
+            patch("babelscore.config.project.BABELSCORE_DIR", tmp_path),
+            patch("babelscore.cli.init_wizard.prompt", return_value="sk-entered"),
+            patch("babelscore.cli.init_wizard.console"),
+        ):
             val, ref = _resolve_api_key(provider)
     finally:
         if saved is not None:
@@ -354,13 +385,16 @@ def test_resolve_api_key_prompts_and_saves_when_missing(tmp_path):
 
 def test_resolve_api_key_reprompts_on_empty(tmp_path):
     from babelscore.cli.init_wizard import _resolve_api_key
+
     provider = {"key_reqd": True, "api_key": "${MY_KEY}"}
     saved = os.environ.pop("MY_KEY", None)
     try:
-        with patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path), \
-             patch("babelscore.config.project.BABELSCORE_DIR", tmp_path), \
-             patch("babelscore.cli.init_wizard.prompt", side_effect=["", "sk-valid"]), \
-             patch("babelscore.cli.init_wizard.console"):
+        with (
+            patch("babelscore.cli.init_wizard.BABELSCORE_DIR", tmp_path),
+            patch("babelscore.config.project.BABELSCORE_DIR", tmp_path),
+            patch("babelscore.cli.init_wizard.prompt", side_effect=["", "sk-valid"]),
+            patch("babelscore.cli.init_wizard.console"),
+        ):
             val, ref = _resolve_api_key(provider)
     finally:
         if saved is not None:
