@@ -266,3 +266,26 @@ def test_load_providers_fallback_on_bad_config(tmp_path):
         providers = load_providers()
     assert len(providers) == 1
     assert providers[0]["name"] == "Custom"
+
+
+def test_pick_provider_returns_matching_provider():
+    with patch("babelscore.cli.init_wizard.pt_prompt", return_value="OpenAI"):
+        from babelscore.cli.init_wizard import _pick_provider
+        result = _pick_provider("Translator")
+    assert result["name"] == "OpenAI"
+    assert result["base_url"] == "https://api.openai.com/v1"
+
+
+def test_pick_provider_custom_returns_custom_dict():
+    with patch("babelscore.cli.init_wizard.pt_prompt", return_value="Custom"):
+        from babelscore.cli.init_wizard import _pick_provider
+        result = _pick_provider("Judge")
+    assert result["name"] == "Custom"
+
+
+def test_pick_provider_reprompts_on_unknown():
+    with patch("babelscore.cli.init_wizard.pt_prompt", side_effect=["garbage", "Ollama"]), \
+         patch("babelscore.cli.init_wizard.console"):
+        from babelscore.cli.init_wizard import _pick_provider
+        result = _pick_provider("Translator")
+    assert result["name"] == "Ollama"

@@ -3,6 +3,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import prompt as pt_prompt
 from rich.console import Console
 from rich.panel import Panel
@@ -30,6 +31,23 @@ def load_providers() -> list[dict]:
     except Exception:
         console.print("[yellow]Warning: could not load config.json — using Custom only.[/yellow]")
         return [_CUSTOM_PROVIDER]
+
+
+def _pick_provider(role: str) -> dict:
+    """WordCompleter dropdown for provider selection. Re-prompts on invalid input."""
+    providers = load_providers()
+    name_map = {p["name"]: p for p in providers}
+    completer = WordCompleter(list(name_map.keys()), match_middle=False)
+
+    while True:
+        raw = pt_prompt(
+            f"{role} provider: ",
+            completer=completer,
+            complete_while_typing=True,
+        ).strip()
+        if raw in name_map:
+            return name_map[raw]
+        console.print(f"[yellow]Unknown provider '{raw}'. Pick from the dropdown.[/yellow]")
 
 
 def normalise_url(url: str) -> str:
