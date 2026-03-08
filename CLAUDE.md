@@ -27,7 +27,25 @@ The alias `uvsrc` is available in the user's shell (`alias uvsrc="source .venv/b
 - Streamlit (Phase 6 — do not build yet)
 
 ## API Constraint
-All translator and judge models communicate via OpenAI-compatible chat completions endpoints only. No provider-specific SDKs. This covers OpenAI, Anthropic (via compatible wrappers), OpenRouter, Ollama, Together, Groq identically.
+All translator and judge models communicate via OpenAI-compatible chat completions endpoints only. No provider-specific SDKs.
+
+**Supported providers** (all via OpenAI-compatible `/v1/chat/completions`):
+| Provider | Notes |
+|---|---|
+| OpenAI | Direct |
+| Anthropic | Via compatible wrapper |
+| OpenRouter | Multi-model gateway |
+| Ollama | Local models |
+| Together | Cloud inference |
+| Groq | Fast inference |
+| LiteLLM | Proxy — exposes 100+ providers uniformly |
+| LM Studio | Local models, OpenAI-compatible server |
+| Eden AI | Multi-provider gateway |
+| Portkey | AI gateway with observability |
+| AWS Bedrock | Via LiteLLM or compatible proxy |
+| Azure OpenAI | Via compatible endpoint |
+
+**Model discovery**: During `/init`, BabelScore fetches the model list from the provider's `/v1/models` endpoint, caches it locally at `~/.babelscore/providers/[provider-slug]/models.json`, and presents a selection menu. Cached lists can be refreshed on demand.
 
 ## Project Storage
 Projects live at `~/.babelscore/projects/[project-name]/` with:
